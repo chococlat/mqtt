@@ -1,0 +1,48 @@
+  vernemq:
+    image: vernemq/vernemq
+    container_name: vernemq
+    ports:
+      - "1883:1883"        # MQTT
+      - "8888:8888"        # WebSocket
+      - "8889:8889"        # Admin Web UI (if enabled)
+      - "4369:4369"        # Erlang discovery
+      - "9100:9100"        # Metrics
+    environment:
+      
+      - DOCKER_VERNEMQ_ACCEPT_EULA=yes
+      - DOCKER_VERNEMQ_LOG__CONSOLE=console
+      - DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL=info
+      
+      - DOCKER_VERNEMQ_ALLOW_ANONYMOUS=off
+      - DOCKER_VERNEMQ_PLUGINS__VMQ_PASSWD=off
+      - DOCKER_VERNEMQ_PLUGINS__VMQ_ACL=off
+      - DOCKER_VERNEMQ_PLUGINS__VMQ_DIVERSITY=on
+
+      - DOCKER_VERNEMQ_VMQ_DIVERSITY__AUTH_REDIS__ENABLED=on
+      - DOCKER_VERNEMQ_VMQ_DIVERSITY__REDIS__HOST=redis
+      - DOCKER_VERNEMQ_VMQ_DIVERSITY__REDIS__PORT=6379
+      - DOCKER_VERNEMQ_VMQ_DIVERSITY__REDIS__DATABASE=0
+
+      #- DOCKER_VERNEMQ_VMQ_DIVERSITY__REDIS__USER=default
+      #- DOCKER_VERNEMQ_VMQ_DIVERSITY__REDIS__PASSWORD=
+      
+    restart: unless-stopped
+
+  mqtt-explorer:
+    image: smeagolworms4/mqtt-explorer:latest
+    container_name: mqtt-explorer
+    ports:
+      - "4000:4000"
+    environment:
+      - HTTP_PORT=4000
+      - CONFIG_PATH=/mqtt-explorer/config
+      - HTTP_USER=  # Optional: Set username for HTTP auth
+      - HTTP_PASSWORD=  # Optional: Set password for HTTP auth
+      - SSL_KEY_PATH=  # Optional: SSL key path
+      - SSL_CERT_PATH=  # Optional: SSL certificate path
+      - INITIAL_CONFIG=  # Optional: Initial JSON configuration
+    volumes:
+      - ./mqtt-explorer-settings.json:/mqtt-explorer/config/settings.json
+    restart: unless-stopped
+    depends_on:
+      - vernemq
